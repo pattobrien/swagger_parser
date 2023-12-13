@@ -206,7 +206,11 @@ class OpenApiParser {
       if (typeWithImport.import != null) {
         imports.add(typeWithImport.import!);
       }
+
+      // final schemaId = (map[_refConst] as String?)
+      //     ?.replaceFirst('#/components/schemas/', '');
       return UniversalType(
+        componentSchemaId: typeWithImport.type.componentSchemaId,
         type: typeWithImport.type.type,
         arrayDepth: typeWithImport.type.arrayDepth,
       );
@@ -317,11 +321,15 @@ class OpenApiParser {
             if (typeWithImport.import != null) {
               imports.add(typeWithImport.import!);
             }
+
+            final schemaId = (map[_refConst] as String)
+                .replaceFirst('#/components/schemas/', '');
             types.add(
               UniversalRequestType(
                 parameterType: HttpParameterType.part,
                 description: requestBody[_descriptionConst]?.toString(),
                 type: UniversalType(
+                  componentSchemaId: schemaId,
                   type: currentType.type,
                   name: 'file',
                   description: currentType.description,
@@ -347,12 +355,20 @@ class OpenApiParser {
               if (typeWithImport.import != null) {
                 imports.add(typeWithImport.import!);
               }
+
+              final schemaId = (map[_refConst] as String)
+                  .replaceFirst('#/components/schemas/', '');
+
+              if (e.key == 'allocatedResources') {
+                print('hello');
+              }
               types.add(
                 UniversalRequestType(
                   parameterType: HttpParameterType.part,
                   name: e.key,
                   description: requestBody[_descriptionConst]?.toString(),
                   type: UniversalType(
+                    componentSchemaId: schemaId,
                     type: currentType.type,
                     name: e.key,
                     description: currentType.description,
@@ -377,11 +393,18 @@ class OpenApiParser {
             imports.add(typeWithImport.import!);
           }
 
+          // final schemaId = (map[_refConst] as String?)
+          //     ?.replaceFirst('#/components/schemas/', '');
+
+          if (_bodyConst == 'allocatedResources') {
+            print('hello');
+          }
           types.add(
             UniversalRequestType(
               parameterType: HttpParameterType.body,
               description: requestBody[_descriptionConst]?.toString(),
               type: UniversalType(
+                componentSchemaId: currentType.componentSchemaId,
                 type: currentType.type,
                 name: _bodyConst,
                 description: currentType.description,
@@ -416,6 +439,7 @@ class OpenApiParser {
         imports.add(typeWithImport.import!);
       }
       return UniversalType(
+        componentSchemaId: throw UnimplementedError(),
         type: typeWithImport.type.type,
         arrayDepth: typeWithImport.type.arrayDepth,
       );
@@ -735,8 +759,13 @@ class OpenApiParser {
           allOfClass.parameters.addAll(element.parameters);
           allOfClass.imports.addAll(element.imports);
         } else if (element is UniversalEnumClass) {
+          final componentSchema = '';
           allOfClass.parameters.add(
-            UniversalType(type: element.name, name: element.name.toCamel),
+            UniversalType(
+              type: element.name,
+              name: element.name.toCamel,
+              componentSchemaId: componentSchema,
+            ),
           );
           allOfClass.imports.add(element.name);
         }
@@ -804,9 +833,14 @@ class OpenApiParser {
 
       final (newName, description) =
           protectName(name, description: map[_descriptionConst]?.toString());
-
+      // final schemaId = (map[_refConst] as String?)
+      //     ?.replaceFirst('#/components/schemas/', '');
+      if (newName?.toCamel == 'allocatedResources') {
+        print('hello');
+      }
       return (
         type: UniversalType(
+          componentSchemaId: arrayType.type.componentSchemaId,
           type: type,
           name: newName?.toCamel,
           description: description,
@@ -854,8 +888,14 @@ class OpenApiParser {
 
       _enumClasses.add(enumClass);
 
+      final schemaId =
+          (map[_refConst] as String).replaceFirst('#/components/schemas/', '');
+      if (variableName.toCamel == 'allocatedResources') {
+        print('hello');
+      }
       return (
         type: UniversalType(
+          componentSchemaId: schemaId,
           type: enumClass.name,
           name: variableName.toCamel,
           description: description,
@@ -929,8 +969,15 @@ class OpenApiParser {
 
       // Interception of objectClass creation when Map construction is expected
       if (typeWithImports.length == 1 && typeWithImports[0].import == null) {
+        // TODO: is getting the schemaId like this correct?
+        final schemaId = (map[_refConst] as String?)
+            ?.replaceFirst('#/components/schemas/', '');
+        if (newName.toCamel == 'allocatedResources') {
+          print('hello');
+        }
         return (
           type: UniversalType(
+            componentSchemaId: schemaId,
             type: map[_typeConst] as String,
             name: newName.toCamel,
             description: description,
@@ -958,8 +1005,14 @@ class OpenApiParser {
         );
       }
 
+      final schemaId =
+          (map[_refConst] as String).replaceFirst('#/components/schemas/', '');
+      if (newName.toCamel == 'allocatedResources') {
+        print('hello');
+      }
       return (
         type: UniversalType(
+          componentSchemaId: schemaId,
           type: newName.toPascal,
           name: newName.toCamel,
           description: description,
@@ -1022,8 +1075,14 @@ class OpenApiParser {
       final (newName, description) =
           protectName(name, description: map[_descriptionConst]?.toString());
 
+      // final schemaId = (map[_refConst] as String?)
+      //     ?.replaceFirst('#/components/schemas/', '');
+      if (newName?.toCamel == 'allocatedResources') {
+        print('hello');
+      }
       return (
         type: UniversalType(
+          componentSchemaId: ofType?.componentSchemaId,
           type: type,
           name: newName?.toCamel,
           description: description,
@@ -1088,8 +1147,26 @@ class OpenApiParser {
 
       final enumType = defaultValue != null && import != null ? type : null;
 
+      final schemaId = (map[_refConst] as String?)
+          ?.replaceFirst('#/components/schemas/', '');
+      final refFromAdditionalProps =
+          map[_additionalPropertiesConst] is Map<String, dynamic>
+              ? (map[_additionalPropertiesConst]
+                          as Map<String, dynamic>)[_refConst] !=
+                      null
+                  ? (map[_additionalPropertiesConst]
+                          as Map<String, dynamic>)[_refConst]
+                      .toString()
+                      .replaceFirst('#/components/schemas/', '')
+                  : null
+              : null;
+
+      if (newName?.toCamel == 'allocatedResources') {
+        print('hello');
+      }
       return (
         type: UniversalType(
+          componentSchemaId: schemaId ?? refFromAdditionalProps,
           type: type,
           name: newName?.toCamel,
           description: description,

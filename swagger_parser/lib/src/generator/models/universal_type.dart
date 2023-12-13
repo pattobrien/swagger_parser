@@ -6,6 +6,7 @@ final class UniversalType {
   /// Constructor for [UniversalType]
   const UniversalType({
     required this.type,
+    required this.componentSchemaId,
     this.name,
     this.description,
     this.format,
@@ -20,6 +21,8 @@ final class UniversalType {
 
   /// Object type
   final String type;
+
+  final String? componentSchemaId;
 
   /// Object name
   final String? name;
@@ -71,8 +74,10 @@ final class UniversalType {
     int? arrayDepth,
     bool? nullable,
     String? mapType,
+    String? componentSchemaId,
   }) {
     return UniversalType(
+      componentSchemaId: componentSchemaId ?? this.componentSchemaId,
       type: type ?? this.type,
       name: name ?? this.name,
       description: description ?? this.description,
