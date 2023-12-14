@@ -1,4 +1,4 @@
-// ignore_for_file: cascade_invocations
+// ignore_for_file: cascade_invocations, unused_import
 
 import 'dart:io';
 
@@ -21,211 +21,179 @@ Future<void> main() async {
     outputRootDir.createSync(recursive: true);
   }
 
-  for (final dataClass in dataClasses) {
-    final outputDir = Directory('bin/output/lib/src/apis');
+  // for (final dataClass in dataClasses) {
+  //   final outputDir = Directory('bin/output/lib/src/apis');
+  //   if (!outputDir.existsSync()) {
+  //     outputDir.createSync(recursive: true);
+  //   }
+
+  //   final relativeFile = dataClass.relativeFilePath;
+  //   final file = File('${outputDir.path}/${relativeFile.path}');
+  //   if (!file.existsSync()) {
+  //     file.createSync(recursive: true);
+  //   }
+
+  //   if (dataClass is! UniversalComponentClass) {
+  //     continue;
+  //   }
+  //   final library = Library((libraryBuilder) {
+  //     final basePartFile = p.basenameWithoutExtension(relativeFile.path);
+  //     libraryBuilder.directives.addAll([
+  //       Directive.import('package:freezed_annotation/freezed_annotation.dart'),
+  //       Directive.part('$basePartFile.freezed.dart'),
+  //       Directive.part('$basePartFile.g.dart'),
+  //     ]);
+  //     libraryBuilder.body.add(
+  //       Class((builder) {
+  //         builder.docs.addAll([
+  //           if (dataClass.description != null)
+  //             '/** ${dataClass.description!} */',
+  //         ]);
+  //         builder.annotations.add(refer('freezed'));
+
+  //         builder.name = dataClass.className;
+  //         builder.mixins.add(refer('_\$${dataClass.className}'));
+  //         builder.constructors.addAll([
+  //           Constructor((builder) {
+  //             builder.factory = true;
+  //             builder.constant = true;
+  //             builder.optionalParameters.addAll(
+  //               dataClass.parameters
+  //                   .map((param) {
+  //                     return Parameter((builder) {
+  //                       builder.name = param.name!;
+
+  //                       if (param.componentSchemaId != null) {
+  //                         final matchingClassName = dataClasses.firstWhere(
+  //                           (clazz) => clazz.name == param.componentSchemaId,
+  //                         );
+  //                         final absolutePath =
+  //                             '${outputRootDir.absolute.path}/${matchingClassName.relativeFilePath.path}';
+  //                         final relativePathToThisClass = p.relative(
+  //                           absolutePath,
+  //                           from: p.dirname(file.absolute.path),
+  //                         );
+  //                         final paramType = 'List<' * param.arrayDepth +
+  //                             matchingClassName.className +
+  //                             '>' * param.arrayDepth +
+  //                             (param.nullable ||
+  //                                     (!param.isRequired &&
+  //                                         param.defaultValue == null)
+  //                                 ? '?'
+  //                                 : '');
+  //                         builder.type = refer(
+  //                           paramType,
+  //                           relativePathToThisClass,
+  //                         );
+  //                         libraryBuilder.directives.add(
+  //                           Directive.import(relativePathToThisClass),
+  //                         );
+  //                       } else {
+  //                         final paramType = param.toSuitableType(
+  //                           ProgrammingLanguage.dart,
+  //                         );
+  //                         builder.type = refer(paramType);
+  //                       }
+  //                       builder.docs.addAll([
+  //                         if (param.description != null)
+  //                           '/** ${param.description!} */',
+  //                       ]);
+  //                       builder.required = param.isRequired;
+  //                       // builder.required = true;
+  //                       builder.annotations.addAll([
+  //                         if (param.defaultValue != null)
+  //                           refer(
+  //                             'Default(${param.type == 'string' ? "'${param.defaultValue}'" : param.defaultValue})',
+  //                             // 'package:freezed_annotation/freezed_annotation.dart',
+  //                           ),
+  //                       ]);
+  //                       builder.named = true;
+  //                     });
+  //                   })
+  //                   .sorted((a, b) => b.name.compareTo(a.name))
+  //                   .sorted((a, b) => a.required ? -1 : 1),
+  //             );
+  //             builder.redirect = refer('_${dataClass.className}');
+  //           }),
+  //           // fromJson
+  //           Constructor((builder) {
+  //             builder.factory = true;
+  //             builder.name = 'fromJson';
+  //             builder.requiredParameters.add(
+  //               Parameter((builder) {
+  //                 builder.name = 'json';
+  //                 builder.type = refer('Map<String, dynamic>');
+  //               }),
+  //             );
+
+  //             builder.lambda = true;
+  //             builder.body = Code(
+  //               '_\$${dataClass.className}FromJson(json)',
+  //             );
+  //           }),
+  //         ]);
+  //       }),
+  //     );
+
+  //     libraryBuilder.directives.sort((a, b) => a.compareTo(b));
+  //   });
+
+  //   final formatter = DartFormatter(
+  //     // experimentFlags: ,
+  //     pageWidth: 80,
+  //     fixes: [...StyleFix.all],
+  //   );
+  //   final emitter = DartEmitter(
+  //     orderDirectives: true,
+  //     useNullSafetySyntax: true,
+  //   );
+
+  //   final contents = library.accept<StringSink>(emitter).toString();
+  //   final formattedContents = formatter.format(contents, uri: file.uri);
+  //   // formatter.(source)
+
+  //   file.writeAsStringSync(formattedContents);
+  // }
+
+  for (final client in restClients) {
+    final name = client.name;
+    final outputDir = Directory('bin/output/lib/src/apis/$name');
     if (!outputDir.existsSync()) {
       outputDir.createSync(recursive: true);
     }
-
-    final relativeFile = dataClass.relativeFilePath;
-    final file = File('${outputDir.path}/${relativeFile.path}');
+    final file = File('${outputDir.path}/${name}_client.dart');
     if (!file.existsSync()) {
       file.createSync(recursive: true);
     }
 
-    final buffer = StringBuffer();
-    // buffer.writeln('// Class ${dataClass.name}');
-    if (dataClass is! UniversalComponentClass) {
-      continue;
-    }
     final library = Library((libraryBuilder) {
-      libraryBuilder.body.addAll([
-        Directive.import('package:freezed_annotation/freezed_annotation.dart'),
-        Directive.part(
-          '${p.basenameWithoutExtension(relativeFile.path)}.freezed.dart',
-        ),
-        Directive.part(
-          '${p.basenameWithoutExtension(relativeFile.path)}.g.dart',
-        ),
-      ]);
       libraryBuilder.body.add(
         Class((builder) {
-          builder.docs.addAll([
-            if (dataClass.description != null)
-              '/** ${dataClass.description!} */',
-          ]);
-          builder.annotations.add(
-            refer(
-              'freezed',
-              'package:freezed_annotation/freezed_annotation.dart',
-            ),
+          builder.name = name;
+          builder.constructors.add(
+            Constructor((builder) {
+              builder.requiredParameters.add(
+                Parameter((builder) {
+                  builder.name = 'client';
+                  builder.type = refer('ApiClient');
+                }),
+              );
+            }),
           );
-
-          builder.name = dataClass.className;
-          builder.mixins.add(refer('_\$${dataClass.className}'));
-          if (dataClass is UniversalComponentClass) {
-            builder.constructors.addAll([
-              Constructor((builder) {
-                builder.factory = true;
-                builder.constant = true;
-                builder.optionalParameters.addAll(
-                  dataClass.parameters
-                      .map((param) {
-                        return Parameter((builder) {
-                          // dataClass.name = "io.k8s.api.core.v1.NodeCondition"
-                          // param.name = "lastHeartbeatTime"
-                          builder.name = param.name!;
-                          if (param.name == 'allocatedResources') {
-                            print('here');
-                          }
-
-                          if (param.componentSchemaId != null) {
-                            final matchingClassName = dataClasses.firstWhere(
-                              (clazz) => clazz.name == param.componentSchemaId,
-                            );
-                            final absolutePath =
-                                '${outputRootDir.absolute.path}/${matchingClassName.relativeFilePath.path}';
-                            final relativePathToThisClass = p.relative(
-                              absolutePath,
-                              from: p.dirname(file.absolute.path),
-                            );
-                            final paramType = 'List<' * param.arrayDepth +
-                                matchingClassName.className +
-                                '>' * param.arrayDepth +
-                                (param.nullable ||
-                                        (!param.isRequired &&
-                                            param.defaultValue == null)
-                                    ? '?'
-                                    : '');
-                            builder.type = refer(
-                              paramType,
-                              relativePathToThisClass,
-                            );
-                            libraryBuilder.directives.add(
-                              Directive.import(relativePathToThisClass),
-                            );
-                          } else {
-                            final paramType = param.toSuitableType(
-                              ProgrammingLanguage.dart,
-                            );
-                            builder.type = refer(paramType);
-                          }
-                          builder.docs.addAll([
-                            if (param.description != null)
-                              '/** ${param.description!} */',
-                          ]);
-                          builder.required = param.isRequired;
-                          // builder.required = true;
-                          builder.annotations.addAll([
-                            if (param.defaultValue != null)
-                              refer(
-                                'Default(${param.type == 'string' ? "'${param.defaultValue}'" : param.defaultValue})',
-                                'package:freezed_annotation/freezed_annotation.dart',
-                              ),
-                          ]);
-                          builder.named = true;
-                        });
-                      })
-                      .sorted((a, b) => b.name.compareTo(a.name))
-                      .sorted((a, b) => a.required ? -1 : 1),
-                );
-                builder.redirect = refer(
-                  '_${dataClass.className}',
-                  dataClass.relativeFilePath.path,
-                );
-              }),
-              // fromJson factory constructor
-              Constructor((builder) {
-                builder.factory = true;
-                builder.name = 'fromJson';
-                builder.requiredParameters.add(
-                  Parameter((builder) {
-                    builder.name = 'json';
-                    builder.type = refer('Map<String, dynamic>');
-                  }),
-                );
-                // builder.body = Code(
-                //   'return _\$${dataClass.className}FromJson(json);',
-                // );
-                // expression body
-                builder.lambda = true;
-                builder.body = Code(
-                  '_\$${dataClass.className}FromJson(json)',
-                );
-              }),
-            ]);
-          }
+          builder.fields.add(
+            Field((builder) {
+              builder.name = '_client';
+              builder.type = refer('ApiClient');
+              builder.modifier = FieldModifier.final$;
+            }),
+          );
+          builder.methods.addAll(
+            [],
+          );
         }),
       );
-
-      libraryBuilder.directives
-        ..sort((a, b) => a.toString().compareTo(b.toString()))
-        ..sort((a, b) {
-          // check for 'package:' imports and move them to the top
-          if (a.url.startsWith('package:') && !b.url.startsWith('package:')) {
-            return -1;
-          } else if (!a.url.startsWith('package:') &&
-              b.url.startsWith('package:')) {
-            return 1;
-          } else {
-            return 0;
-          }
-        })
-        ..sort((a, b) {
-          final typeA = a.type;
-          final typeB = b.type;
-          // directive type order (including export) goes: import, part, export
-
-          if (typeA == DirectiveType.import && typeB == DirectiveType.part) {
-            return -1;
-          } else if (typeA == DirectiveType.part &&
-              typeB == DirectiveType.import) {
-            return 1;
-          } else if (typeA == DirectiveType.export &&
-              typeB == DirectiveType.import) {
-            return -1;
-          } else if (typeA == DirectiveType.import &&
-              typeB == DirectiveType.export) {
-            return 1;
-          } else if (typeA == DirectiveType.export &&
-              typeB == DirectiveType.part) {
-            return -1;
-          } else if (typeA == DirectiveType.part &&
-              typeB == DirectiveType.export) {
-            return 1;
-          } else {
-            return 0;
-          }
-        });
     });
-
-    final formatter = DartFormatter(
-      pageWidth: 80,
-      fixes: StyleFix.all,
-    );
-    buffer.write(formatter.format('${library.accept(DartEmitter())}'));
-
-    file.writeAsStringSync(buffer.toString());
   }
 
   print('Completed!');
-
-  // for (final client in restClients) {
-  //   final outputDir = Directory('bin/output/lib');
-  //   if (!outputDir.existsSync()) {
-  //     outputDir.createSync();
-  //   }
-
-  //   final file = File('bin/output/lib/${client.name}.dart');
-  //   if (!file.existsSync()) {
-  //     file.createSync();
-  //   }
-
-  //   final buffer = StringBuffer();
-  //   for (final import in client.imports) {
-  //     buffer.writeln(import);
-  //   }
-
-  //   file.writeAsStringSync(buffer.toString());
-  // }
 }

@@ -35,7 +35,7 @@ sealed class UniversalDataClass {
     path = path.startsWith('k8s.api.') ? path.replaceFirst('api.', '') : path;
 
     // swap dots for slashes
-    path = '${name.replaceAll('.', '/')}.dart';
+    path = '${path.replaceAll('.', '/')}.dart';
 
     // convert the path into a uri
     var uri = Uri.parse(path);
