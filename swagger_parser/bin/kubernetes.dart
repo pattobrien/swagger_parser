@@ -6,6 +6,7 @@ import 'package:code_builder/code_builder.dart';
 import 'package:collection/collection.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as p;
+import 'package:recase/recase.dart';
 import 'package:swagger_parser/src/generator/models/universal_type.dart';
 import 'package:swagger_parser/swagger_parser.dart';
 
@@ -15,6 +16,16 @@ Future<void> main() async {
   final openApi = parser.parseOpenApiInfo();
   final restClients = parser.parseRestClients();
   final dataClasses = parser.parseDataClasses();
+
+  final formatter = DartFormatter(
+    // experimentFlags: ,
+    pageWidth: 80,
+    fixes: [...StyleFix.all],
+  );
+  final emitter = DartEmitter(
+    orderDirectives: true,
+    useNullSafetySyntax: true,
+  );
 
   final outputRootDir = Directory('bin/output/lib/src/apis');
   if (!outputRootDir.existsSync()) {
@@ -138,16 +149,6 @@ Future<void> main() async {
   //     libraryBuilder.directives.sort((a, b) => a.compareTo(b));
   //   });
 
-  //   final formatter = DartFormatter(
-  //     // experimentFlags: ,
-  //     pageWidth: 80,
-  //     fixes: [...StyleFix.all],
-  //   );
-  //   final emitter = DartEmitter(
-  //     orderDirectives: true,
-  //     useNullSafetySyntax: true,
-  //   );
-
   //   final contents = library.accept<StringSink>(emitter).toString();
   //   final formattedContents = formatter.format(contents, uri: file.uri);
   //   // formatter.(source)
@@ -167,33 +168,67 @@ Future<void> main() async {
     }
 
     final library = Library((libraryBuilder) {
+      libraryBuilder.directives.addAll([
+        Directive.import('package:dio/dio.dart'),
+      ]);
       libraryBuilder.body.add(
         Class((builder) {
-          builder.name = name;
+          builder.name = '${name.pascalCase}Client';
           builder.constructors.add(
             Constructor((builder) {
               builder.requiredParameters.add(
                 Parameter((builder) {
-                  builder.name = 'client';
-                  builder.type = refer('ApiClient');
+                  builder.name = '_dio';
+                  builder.toThis = true;
                 }),
               );
             }),
           );
-          builder.fields.add(
+          builder.fields.addAll([
             Field((builder) {
-              builder.name = '_client';
-              builder.type = refer('ApiClient');
+              builder.name = '_dio';
+              builder.type = refer('Dio');
               builder.modifier = FieldModifier.final$;
             }),
-          );
+          ]);
           builder.methods.addAll(
-            [],
+            [
+              // for every request
+              ...client.requests.map((e) {
+                return Method((builder) {
+                  builder.name = e.name.camelCase;
+
+                  final httpMethod = e.requestType;
+
+                  final parameters = e.parameters;
+                  final returnType = getTypeName(e.returnType);
+
+                  builder.returns = refer('Future<$returnType>');
+
+                  final requestPath = e.route;
+
+                  builder.body = Code(
+                    'return _dio.request<$returnType>(\n'
+                    "  '$requestPath',\n"
+                    ');',
+                  );
+                });
+              }),
+            ],
           );
         }),
       );
     });
+
+    final contents = library.accept<StringSink>(emitter).toString();
+    final formattedContents = formatter.format(contents, uri: file.uri);
+
+    file.writeAsStringSync(formattedContents);
   }
 
   print('Completed!');
+}
+
+String getTypeName(UniversalType? type) {
+  return type?.componentSchemaId ?? type?.type ?? 'void';
 }
